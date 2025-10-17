@@ -47,6 +47,38 @@ async function run() {
       res.send({ count: result.length });
     });
 
+    //---------------------------Agreements Related APIs -------------------------------
+    app.get("/agreements", async (req, res) => {
+      const result = await agreements_collection.find().toArray();
+      res.send(result);
+    });
+
+    app.post("/agreements", async (req, res) => {
+      const agreements = req.body;
+      const result = await agreements_collection.insertOne(agreements);
+      res.send(result);
+    });
+
+    app.patch("/agreements/:id", async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) };
+      const Status = req.body;
+      const updateData = {
+        $set: {
+          Status: Status.Status,
+        },
+      };
+      const result = await agreements_collection.updateOne(query, updateData);
+      res.send(result);
+    });
+
+    app.delete("/agreements/:id", async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) };
+      const result = await agreements_collection.deleteOne(query);
+      res.send(result);
+    });
+
     // await client.db("admin").command({ ping: 1 });
     console.log("✅ Connected to MongoDB!");
   }

@@ -23,7 +23,13 @@ const client = new MongoClient(uri, {
 
 async function run() {
   try {
+    const users_collection = client.db("Lux-tower").collection("users");
+    const payment_collection = client.db("Lux-tower").collection("payment");
+    const coupons_collection = client.db("Lux-tower").collection("coupons");
+    const contact_collection = client.db("Lux-tower").collection("contact_message");
+    const agreements_collection = client.db("Lux-tower").collection("agreements");
     const appartmants_collection = client.db("Lux-tower").collection("appartments");
+    const announcements_collection = client.db("Lux-tower").collection("announcements");
 
     //--------------------------- Apartment Related APIs -------------------------------
     app.get("/appartmants", async (req, res) => {
@@ -47,7 +53,7 @@ async function run() {
       res.send({ count: result.length });
     });
 
-    //---------------------------there work about contact -------------------------------
+    //---------------------------Contact Related APIs-------------------------------
     app.get("/contact_message", async (req, res) => {
       const result = await contact_collection.find().toArray();
       res.send(result);
@@ -95,6 +101,62 @@ async function run() {
       const id = req.params.id;
       const query = { _id: new ObjectId(id) };
       const result = await agreements_collection.deleteOne(query);
+      res.send(result);
+    });
+
+        //--------------------------- Announcements Related APIs -------------------------------
+    app.get("/announcements", async (req, res) => {
+      const result = await announcements_collection.find().toArray();
+      res.send(result);
+    });
+
+    app.post("/announcements", async (req, res) => {
+      const announcements = req.body;
+      const result = await announcements_collection.insertOne(announcements);
+      res.send(result);
+    });
+
+    app.delete("/announcements/:id", async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) };
+      const result = await announcements_collection.deleteOne(query);
+      res.send(result);
+    });
+
+    //---------------------------Coupons Related APIs -------------------------------
+    app.get("/coupons", async (req, res) => {
+      const result = await coupons_collection.find().toArray();
+      res.send(result);
+    });
+
+    app.post("/coupons", async (req, res) => {
+      const coupons = req.body;
+      const result = await coupons_collection.insertOne(coupons);
+      res.send(result);
+    });
+
+    app.delete("/coupons/:id", async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) };
+      const result = await coupons_collection.deleteOne(query);
+      res.send(result);
+    });
+
+    app.put("/coupons/:id", async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) };
+      const coupon = req.body;
+
+      const updatedservices = {
+        $set: {
+          offerDigit: coupon.offerDigit,
+          offerType: coupon.offerType,
+          code: coupon.code,
+          description: coupon.description,
+        },
+      };
+
+      const result = await coupons_collection.updateOne(query, updatedservices);
       res.send(result);
     });
 

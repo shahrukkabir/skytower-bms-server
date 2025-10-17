@@ -47,6 +47,25 @@ async function run() {
       res.send({ count: result.length });
     });
 
+    //---------------------------there work about contact -------------------------------
+    app.get("/contact_message", async (req, res) => {
+      const result = await contact_collection.find().toArray();
+      res.send(result);
+    });
+
+    app.post("/contact_message", async (req, res) => {
+      const announcements = req.body;
+      const result = await contact_collection.insertOne(announcements);
+      res.send(result);
+    });
+
+    app.delete("/contact_message/:id", async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) };
+      const result = await contact_collection.deleteOne(query);
+      res.send(result);
+    });
+
     //---------------------------Agreements Related APIs -------------------------------
     app.get("/agreements", async (req, res) => {
       const result = await agreements_collection.find().toArray();

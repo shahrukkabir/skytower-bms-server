@@ -1,5 +1,6 @@
 const express = require("express");
 const cors = require("cors");
+const jwt = require('jsonwebtoken');
 require("dotenv").config();
 const app = express();
 const stripe = require("stripe")(process.env.STRIPE_KEY);
@@ -30,6 +31,43 @@ async function run() {
     const agreements_collection = client.db("Lux-tower").collection("agreements");
     const appartmants_collection = client.db("Lux-tower").collection("appartments");
     const announcements_collection = client.db("Lux-tower").collection("announcements");
+
+    // Generates a JWT token for the user, called during login or authentication from AuthProvider->onAuthStateChanged
+    app.post('/jwt', async (req, res) => {
+      const user = req.body;
+      const token = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET, { expiresIn: '1h' });
+      res.send({ token });
+    })
+
+    // Middleware to verify JWT token and authenticate the user
+    const verifyToken = (req, res, next) => {
+      // console.log('Inside Verify Token', req.headers);
+      if (!req.headers.authorization) {
+        return res.status(401).send({ message: 'Unauthorized access' });
+      }
+      const token = req.headers.authorization.split(' ')[1];
+      jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, (err, decoded) => {
+        if (err) {
+          return res.status(401).send({ message: 'Unauthorized access' });
+        }
+        req.decoded = decoded;
+        next();
+      });
+    };
+
+    // Middleware to verify if the user is an admin after token verification
+    const verifyAdmin = async (req, res, next) => {
+      const email = req.decoded.email;
+      const query = { email: email };
+      const user = await users_collection.findOne(query);
+      const isAdmin = user?.position === 'admin';
+      if (!isAdmin) {
+        return res.status(403).send({ message: 'forbidden access' });
+      }
+      next();
+    }
+
+   
 
     //---------------------------Payments Related APIs  -------------------------------
     app.get("/payments", async (req, res) => {
@@ -191,7 +229,7 @@ async function run() {
     });
 
     ///-------------------User Related APIs -----------------------------------------------
-    app.get("/users", async (req, res) => {
+    app.get("/users", verifyToken, verifyAdmin,  async (req, res) => {
       const result = await users_collection.find().toArray();
       res.send(result);
     });

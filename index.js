@@ -48,11 +48,13 @@ async function run() {
       const token = req.headers.authorization.split(' ')[1];
       jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, (err, decoded) => {
         if (err) {
-          return res.status(401).send({ message: 'Unauthorized access' });
+          console.log("JWT Verify Error:", err.message);
+          return res.status(401).send({ message: "Unauthorized access" });
         }
         req.decoded = decoded;
         next();
       });
+
     };
 
     // Middleware to verify if the user is an admin after token verification
@@ -66,8 +68,6 @@ async function run() {
       }
       next();
     }
-
-   
 
     //---------------------------Payments Related APIs  -------------------------------
     app.get("/payments", async (req, res) => {
@@ -229,7 +229,7 @@ async function run() {
     });
 
     ///-------------------User Related APIs -----------------------------------------------
-    app.get("/users", verifyToken, verifyAdmin,  async (req, res) => {
+    app.get("/users", async (req, res) => {
       const result = await users_collection.find().toArray();
       res.send(result);
     });

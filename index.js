@@ -41,9 +41,11 @@ async function run() {
 
     // Middleware to verify JWT token and authenticate the user
     const verifyToken = (req, res, next) => {
-      // console.log('Inside Verify Token', req.headers);
+      console.log('Inside Verify Token', req.headers.authorization);
+      console.log("Authorization header:", req.headers.authorization);
+
       if (!req.headers.authorization) {
-        return res.status(401).send({ message: 'Unauthorized access' });
+        return res.status(401).send({ message: 'Forbidden access' });
       }
       const token = req.headers.authorization.split(' ')[1];
       jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, (err, decoded) => {

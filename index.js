@@ -40,17 +40,17 @@ async function run() {
     })
 
     // Middleware to verify JWT token and authenticate the user
-    const verifyToken = (req, res, next) => {
-      console.log('Inside Verify Token', req.headers.authorization);
-      console.log("Authorization header:", req.headers.authorization);
+    const verifyToken = (req, res, next) => { 
+      // console.log('Inside Verify Token', req.headers.authorization);
+      // console.log("Authorization header:", req.headers.authorization);
 
       if (!req.headers.authorization) {
-        return res.status(401).send({ message: 'Forbidden access' });
+        return res.status(401).send({ message: 'Unauthorized access' });
       }
       const token = req.headers.authorization.split(' ')[1];
       jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, (err, decoded) => {
         if (err) {
-          console.log("JWT Verify Error:", err.message);
+          // console.log("JWT Verify Error:", err.message);
           return res.status(401).send({ message: "Unauthorized access" });
         }
         req.decoded = decoded;
@@ -66,13 +66,13 @@ async function run() {
       const user = await users_collection.findOne(query);
       const isAdmin = user?.position === 'admin';
       if (!isAdmin) {
-        return res.status(403).send({ message: 'forbidden access' });
+        return res.status(403).send({ message: 'Forbidden access' });
       }
       next();
     }
 
     //---------------------------Payments Related APIs  -------------------------------
-    app.get("/payments", async (req, res) => {
+    app.get("/payments", verifyToken, async (req, res) => {
       const result = await payment_collection.find().toArray();
       res.send(result);
     });
@@ -124,7 +124,7 @@ async function run() {
     });
 
     //---------------------------Contact Related APIs -------------------------------
-    app.get("/contact_message", async (req, res) => {
+    app.get("/contact_message", verifyToken, async (req, res) => {
       const result = await contact_collection.find().toArray();
       res.send(result);
     });
@@ -135,7 +135,7 @@ async function run() {
       res.send(result);
     });
 
-    app.delete("/contact_message/:id", async (req, res) => {
+    app.delete("/contact_message/:id", verifyToken, verifyAdmin, async (req, res) => {
       const id = req.params.id;
       const query = { _id: new ObjectId(id) };
       const result = await contact_collection.deleteOne(query);
@@ -154,7 +154,7 @@ async function run() {
       res.send(result);
     });
 
-    app.patch("/agreements/:id", async (req, res) => {
+    app.patch("/agreements/:id", verifyToken, verifyAdmin, async (req, res) => {
       const id = req.params.id;
       const query = { _id: new ObjectId(id) };
       const Status = req.body;
@@ -167,7 +167,7 @@ async function run() {
       res.send(result);
     });
 
-    app.delete("/agreements/:id", async (req, res) => {
+    app.delete("/agreements/:id", verifyToken, verifyAdmin, async (req, res) => {
       const id = req.params.id;
       const query = { _id: new ObjectId(id) };
       const result = await agreements_collection.deleteOne(query);
@@ -175,18 +175,18 @@ async function run() {
     });
 
     //---------------------------Announcements Related APIs-------------------------------
-    app.get("/announcements", async (req, res) => {
+    app.get("/announcements", verifyToken, async (req, res) => {
       const result = await announcements_collection.find().toArray();
       res.send(result);
     });
 
-    app.post("/announcements", async (req, res) => {
+    app.post("/announcements", verifyToken, verifyAdmin, async (req, res) => {
       const announcements = req.body;
       const result = await announcements_collection.insertOne(announcements);
       res.send(result);
     });
 
-    app.delete("/announcements/:id", async (req, res) => {
+    app.delete("/announcements/:id", verifyToken, verifyAdmin, async (req, res) => {
       const id = req.params.id;
       const query = { _id: new ObjectId(id) };
       const result = await announcements_collection.deleteOne(query);
@@ -199,20 +199,20 @@ async function run() {
       res.send(result);
     });
 
-    app.post("/coupons", async (req, res) => {
+    app.post("/coupons", verifyToken, verifyAdmin, async (req, res) => {
       const coupons = req.body;
       const result = await coupons_collection.insertOne(coupons);
       res.send(result);
     });
 
-    app.delete("/coupons/:id", async (req, res) => {
+    app.delete("/coupons/:id", verifyToken, verifyAdmin, async (req, res) => {
       const id = req.params.id;
       const query = { _id: new ObjectId(id) };
       const result = await coupons_collection.deleteOne(query);
       res.send(result);
     });
 
-    app.put("/coupons/:id", async (req, res) => {
+    app.put("/coupons/:id", verifyToken, verifyAdmin, async (req, res) => {
       const id = req.params.id;
       const query = { _id: new ObjectId(id) };
       const coupon = req.body;
@@ -231,12 +231,12 @@ async function run() {
     });
 
     ///-------------------User Related APIs -----------------------------------------------
-    app.get("/users", async (req, res) => {
+    app.get("/users", verifyToken, async (req, res) => {
       const result = await users_collection.find().toArray();
       res.send(result);
     });
 
-    app.patch("/users/:id", async (req, res) => {
+    app.patch("/users/:id", verifyToken, verifyAdmin, async (req, res) => {
       const id = req.params.id;
       const query = { _id: new ObjectId(id) };
       const updateData = { $set: { position: req.body.position } };
@@ -244,7 +244,7 @@ async function run() {
       res.send(result);
     });
 
-    app.patch("/usermanage/:email", async (req, res) => {
+    app.patch("/usermanage/:email", verifyToken, async (req, res) => {
       const query = { email: req.params.email };
       const position = req.body;
       const updateData = {
@@ -262,16 +262,16 @@ async function run() {
       res.send(result);
     });
 
-    app.delete("/users/:id", async (req, res) => {
+    app.delete("/users/:id", verifyToken, verifyAdmin, async (req, res) => {
       const id = req.params.id;
       const query = { _id: new ObjectId(id) };
       const result = await users_collection.deleteOne(query);
       res.send(result);
     });
-
     // await client.db("admin").command({ ping: 1 });
     console.log("✅ Connected to MongoDB!");
-  } finally {
+  } 
+  finally {
   }
 }
 run().catch(console.dir);
